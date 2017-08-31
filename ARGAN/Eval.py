@@ -28,8 +28,7 @@ def mse(imageA, imageB):
 	# return the MSE, the lower the error, the more "similar"
 	# the two images are
 	return err
-#def psnr(err):
- #  return 10.0*np.log(255.0*255.0/err)
+
 
 
 def psnr(img1, img2):
@@ -48,17 +47,8 @@ with open(image_file,'r') as f:
     l = l.rsplit('/',1)[1]
 
     Ic  = np.asarray(Image.open(os.path.join(clean_image_folder,l)), dtype = 'float32')
-#    print np.mean(Ic)
-#    print "******************" 
+
     In  = np.asarray(Image.open(os.path.join(noisy_image_folder,l)), dtype = 'float32') 
-#    print np.mean(In)
     Ir  = np.asarray(Image.open(os.path.join(recon_image_folder,l)), dtype = 'float32')
-#    print "*******************"
-#    print np.mean(Ir)
+
     print l+" "+str(psnr(Ic,In))+" "+str(psnr(Ic,Ir))
-    
-  #  print Ir  
-# print "{} = {}".format("Shape of reconstructed image",Ir.shape)
- #   sys.exit(0)
-   # print l+" "+str(measure.compare_psnr(im_true=Ic, im_test=In, data_range=255.0))+" "+str(measure.compare_psnr(im_true=Ic, im_test=Ir, dynamic_range=255.0)) 
-    
