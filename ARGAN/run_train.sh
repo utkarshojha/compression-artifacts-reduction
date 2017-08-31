@@ -1,5 +1,5 @@
 CUDA_VISIBLE_DEVICES=2 \
-python GAN.py  \
+python Train.py  \
 --lr1=1e-4  \
 --lr2=1e-4  \
 --batch-size=32  \
