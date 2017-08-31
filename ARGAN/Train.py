@@ -121,46 +121,24 @@ with tf.Session(config=config) as sess:
   def return_random (min_val , max_val):
     # return tf.random_uniform([1], minval = min_val , maxval = max_val , dtype = tf.float32)
     return tf.constant(1.0)
-#  pos_loss = Losses.cross_entropy_sigmoid(logits = t_,labels = tf.random_uniform([1],minval=0.7,maxval=1.2,dtype=tf.float32)*tf.ones_like(t_))
-#  neg_loss = Losses.cross_entropy_sigmoid(logits = f_,labels = tf.random_uniform([1],minval=0.0,maxval=0.3,dtype=tf.float32)*tf.ones_like(f_))
-#  adv_loss = Losses.cross_entropy_sigmoid(logits = f_,labels = tf.random_uniform([1],minval=0.7,maxval=1.2,dtype=tf.float32)*tf.ones_like(f_))
-  '''Modification begins here'''
+
   pos_loss = -tf.reduce_mean((tf.constant(1.0)*tf.log(prob_t_))) #+ ((1.0 - return_random(0.8,1.2))*tf.log(1.0-prob_t_)))
   neg_loss = -tf.reduce_mean((1.0 - tf.constant(0.0))*tf.log(1.0-prob_f_))
-#  smoothen_high = tf.random_uniform([1], minval=0.7 , maxval= 1.2, dtype=tf.float32)
-#  smoothen_low = tf.random_uniform( [1], minval=0.0, maxval= 0.3, dtype = tf.float32)
-#  disc_loss = -tf.reduce_mean((tf.random_uniform([1], minval=0.7 , maxval= 1.2, dtype=tf.float32)*tf.log(prob_t_)) + ((1.0 - (tf.random_uniform( [1], minval=0.0, maxval= 0.3, dtype = tf.float32)))*tf.log(1 - prob_f_)))
-#  genr_loss = -tf.reduce_mean(smoothen_high*tf.log(prob_f_))
-#  disc_loss = -tf.reduce_mean(tf.log(prob_t_) + tf.log(1 - prob_f_))
-###  genr_loss = -tf.reduce_mean((tf.constant(1.0)*tf.log(prob_f_))) 
-#  disc_true_loss = -tf.reduce_mean(tf.log(prob_t_))
-#  disc_false_loss = -tf.reduce_mean(tf.log(1 - prob_f_))
-###  genr_loss  = (genr_loss) + (0.8*LOSS) 
-  '''End here'''
+
   disc_true_loss = pos_loss
   disc_false_loss = neg_loss 
   disc_loss = pos_loss + neg_loss
-#  genr_loss = adv_loss # + (0.8*LOSS) 
   Loss_ops['pos_loss'] = pos_loss
   Loss_ops['neg_loss'] = neg_loss
-#  Loss_ops['adv_loss'] = adv_loss
   Loss_ops['disc_loss'] = disc_loss
-#  Loss_ops['genr_loss'] = genr_loss
   Loss_ops['disc_true_loss']= disc_true_loss
   Loss_ops['disc_false_loss'] = disc_false_loss
  
- # alph = 0.1 
- # LOSS_adv = (1-alph)* LOSS + (alph)* adv_loss
-#  LOSS_adv = genr_loss
-#  Loss_ops['model_loss'] = LOSS_adv
-  
 
-#  tf.summary.scalar('loss_adv', genr_loss)
-
-  #BACK_PROP_OP_adv = E.get_backprop(
-   #                    genr_loss,
-    #                   step_
-     #                )
+  BACK_PROP_OP_adv = E.get_backprop(
+                       genr_loss,
+                       step_
+                     )
 
   BACK_PROP_OP_dis = D.get_backprop(
                        disc_loss,
@@ -187,7 +165,7 @@ with tf.Session(config=config) as sess:
   t_coord   = tf.train.Coordinator()
   t_threads = tf.train.start_queue_runners(coord=t_coord)
 
-
+'''If you want to save all the variables and visualize them in tensorboard then un comment this'''
   ## Add histograms for trainable variables.
 #  for var in tf.trainable_variables():
 #    tf.summary.histogram(var.op.name, var)
@@ -208,25 +186,13 @@ with tf.Session(config=config) as sess:
   i=0
   j=0
   while step <= stop_step:
-#    print  "Getting the training batch"
     X_train_batch, Y_train_batch = E.sess.run([X_train_,Y_train_])
-#    print Y_train_batch.shape
 
-#    print Y_train_batch[0][:,:,0]
-#    print "Getting the noisy batch" 
-#    X_train_batch = sess.run(tf.random_uniform([32,64,64,3], minval = 0.0 , maxval = 1.0 , dtype = tf.float32))
-#    print "*********************"
-#    print X_train_batch.shape
-#    print X_train_batch[0][:,:,0]
-   # sys.exit(0)
-    # get op summary
     summary = E.sess.run(
                 [summary_op],
                 feed_dict={x_:X_train_batch,y_:Y_train_batch, phase_train:True}
               )
-#    print "Session run for summary operation"
-#    print "Training probabilities"
-    
+  
     prob_t, prob_f, pos_l,neg_l,total_disc_loss,tl,fl = D.sess.run(
         [prob_t_,prob_f_,pos_loss,neg_loss,disc_loss,t_,f_],
         feed_dict={
@@ -236,42 +202,22 @@ with tf.Session(config=config) as sess:
 	}
       )
     if( True ):
-#      print "{} = {}".format("This is the clean image batch",Y_train_batch[0])
-#      print "{} = {}".format("This is the batch not used",X_train[0])
-#      print "{} = {}".format("This is the noisy batch created",X_train_batch[0])  
-#    print "blah blah extracted by running the session"
-#    assert total_disc_loss == pos_l + neg_l
+
      print step
      print "{} = {}".format("Total disc loss",total_disc_loss)
      print "{} = {}".format("Positive loss",pos_l)
      print "{} = {}".format("Negative loss",neg_l)
-   ##  print "{} = {}".format("Generator loss",generator_loss)
      print "{} = {} {} = {}".format("Prob_t",prob_t,"Prob_f",prob_f)
      print "{} = {}".format("True logit",np.mean(tl))
      print "{} = {}".format("False logit",np.mean(fl))
      print "{} = {}".format("Mean of x train batch",np.mean(X_train_batch))
      print "{} = {}".format("Mean of y train batch",np.mean(Y_train_batch))
-#     print "{} = {}".format("Mean squarred error between the noisy and clean batch",((Y_train_batch - X_train_batch)**2).mean(axis = None))
      print "{} = {}".format("Mean squarred error between actual pair",((Y_train_batch - X_train_batch)**2).mean(axis  =None))
-#    print "{} = {}".format("Mean of the not used one",np.mean(X_train))
      print "************************"  
         
     if(False):
      sys.exit(0)
-    # run one grad update 
-   # if prob_t >0.9 or prob_f<0.1:
-#    if (True): 
- 
- #    i=i+1
-#     _ = E.sess.run(
-#            [BACK_PROP_OP_adv],
-#            feed_dict={
-#              x_:X_train_batch,
-#              y_:Y_train_batch,
-#              phase_train:True
-#            }
-#          )
-   # if prob_t <0.9 or prob_f>0.1:
+
     j=j+1
     _ = D.sess.run(
             [BACK_PROP_OP_dis],
@@ -282,23 +228,6 @@ with tf.Session(config=config) as sess:
             }
           )
 
-#    _ = D.sess.run(
-#            [BACK_PROP_OP_false_dis],
-#            feed_dict={
-#              x_:X_train_batch,
-#              y_:Y_train_batch,
-#              phase_train:True
-#            }
-#          )
-
-  #  _= D.sess.run(
-  #	    [BACK_PROP_OP_false_dis],
-  #	   feed_dict = {
-  #             x_:X_train_batch,
-  #	       y_:Y_train_batch,
-  #	       phase_train:True
-  #            }
-  #     )				
 
     writer.add_summary(summary[0], step)
 
@@ -316,10 +245,7 @@ with tf.Session(config=config) as sess:
           phase_train:False
         }
       )
-#      assert pos_lv + neg_lv == total_disc_lossv 
-#      print "Validation disc posotive loss "+str(pos_lv)
-#      print "Validation disc negative loss "+str(neg_lv)
-#      print "Validation disc total loss "+str(total_disc_lossv)
+
       LOSSES = {}
       for loss_op in Loss_ops:
         op = Loss_ops[loss_op]
@@ -342,23 +268,16 @@ with tf.Session(config=config) as sess:
              )
         LOSSES[loss_op+'_valdn'] = out[0]
      
-#      print "****************************"
-#      print "Training and valiation loss" 
-
-      # printing all losses
+# Printing differrent losses
       loss_str_list = []
       for key in LOSSES:
           if  key=='disc_loss_train' or key=='disc_true_loss_train' or key=='disc_false_loss_train':
 
            loss_str_list.append(" {} = {:e}".format(key,LOSSES[key]))
-#      print("[{}]Step={:5d}{}".format(time.strftime("%A:%B-%d-%Y %H:%M:%S"),step, "".join(loss_str_list)))
   
       prob_t, prob_f = D.sess.run([prob_t_, prob_f_], feed_dict = {x_: X_valdn_batch, y_:Y_valdn_batch, phase_train:False})
-#      print "***************************"
-#      print "Probabilities"
-#      print "Prob_true "+str(prob_t)+" Prob_false "+str(prob_f)
-      
-#    print i,j
+  
+
     sys.stdout.flush()
     if step % args.snapshot_interval == 0 or step == stop_step:
       E.save_model(os.path.join(LGXY, 'checkpoints', "{}.{:05d}.ckpt".format(LGXY,step)))
@@ -366,7 +285,7 @@ with tf.Session(config=config) as sess:
     step += 1
 
   print("Done")
-  #tf.reset_default_graph()
+
 
 
 try:
