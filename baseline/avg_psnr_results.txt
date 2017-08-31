@@ -1,0 +1,3 @@
+Average noisy PSNR = 28.0607057901
+Average recon PSNR = 28.8379574926
+Average diffr PSNR = 0.777251702476
